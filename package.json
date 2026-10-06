@@ -1,0 +1,35 @@
+{
+  "name": "Backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "start": "tsx src/server.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.17.0",
+      "onFail": "download"
+    }
+  },
+  "type": "module",
+  "dependencies": {
+    "fastify": "^5.12.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "pino-pretty": "^13.2.0",
+    "prettier": "^3.9.9",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
