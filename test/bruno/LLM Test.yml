@@ -1,0 +1,78 @@
+info:
+  name: LLM Test
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: https://openrouter.ai/api/v1/chat/completions
+  body:
+    type: json
+    data: |-
+      {
+        "model": "nvidia/nemotron-3.5-super-vl:free",
+        "temperature": 0,
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "This is a photo of a rigging sling tag. Transcribe exactly what is printed or stamped on it. Do not guess: if a field is unreadable, use null. Respond with ONLY a JSON object with these keys: manufacturer, sling_type, component_diameter, finished_diameter, length, vertical_tons, choker_tons, basket_tons, date, serial_number."
+              },
+              {
+                "type": "image_url",
+                "image_url": { "url": "{{imageData}}" }
+              }
+            ]
+          }
+        ]
+      }
+  auth:
+    type: bearer
+    token: "{{process.env.OPEN_ROUTER_API_KEY}}"
+
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const fs = require("fs");
+        const path = require("path");
+
+        const img = fs.readFileSync(path.join(bru.cwd(), "1.jpg"));
+        bru.setVar("imageData", `data:image/jpeg;base64,${img.toString("base64")}`);
+    - type: tests
+      code: |-
+        test("request succeeded", () => {
+          expect(res.status, JSON.stringify(res.body)).to.equal(200);
+        });
+
+        if (res.status === 200) {
+          const raw = res.body.choices[0].message.content;
+          const data = JSON.parse(raw.replace(/```json|```/g, "").trim());
+
+          const norm = (v) => String(v ?? "").toLowerCase().replace(/[\s"']/g, "");
+          const normSerial = (v) => String(v ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+          test("manufacturer", () => expect(norm(data.manufacturer)).to.equal("mazzella"));
+          test("sling type", () => expect(norm(data.sling_type)).to.match(/7-?part/));
+          test("component diameter", () => expect(norm(data.component_diameter)).to.equal("1/8"));
+          test("finished diameter", () => expect(norm(data.finished_diameter)).to.equal("3/8"));
+          test("vertical capacity", () => expect(parseFloat(data.vertical_tons)).to.equal(1.2));
+          test("choker capacity", () => expect(parseFloat(data.choker_tons)).to.equal(1.0));
+          test("basket capacity", () => expect(parseFloat(data.basket_tons)).to.equal(2.4));
+          test("length", () => expect(norm(data.length)).to.match(/^8/));
+          test("date", () => expect(norm(data.date)).to.equal("08-20"));
+          test("serial number", () => expect(normSerial(data.serial_number)).to.equal("30P30619694"));
+        }
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
