@@ -1,4 +1,5 @@
-import Fastify from 'fastify';
+import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
+import { prismaPlugin } from './plugins/prisma.js';
 
 const envToLogger = {
   development: {
@@ -18,8 +19,20 @@ const fastify = Fastify({
   logger: envToLogger[process.env.NODE_ENV as keyof typeof envToLogger] ?? true
 });
 
+await fastify.register(prismaPlugin);
+
 fastify.get('/test', async (_request, reply) => {
   return reply.code(200).send('Hello World');
+});
+
+fastify.get('/health', async (_request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    await fastify.prisma.$queryRaw`SELECT 1`;
+    return reply.code(200).send({ message: 'ok', db: 'connected' });
+  } catch (error) {
+    console.error('Prisma health check failed:', error);
+    return reply.code(500).send({ message: 'error', db: 'disconnected', error: String(error) });
+  }
 });
 
 fastify.listen({ port: 3000, host: '0.0.0.0' }, (error) => {
