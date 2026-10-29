@@ -1,6 +1,6 @@
 import { PrismaClient } from '../generated/prisma/client.js';
 import { PrismaPg } from '@prisma/adapter-pg';
-import fp from 'fastify-plugin';
+import fastifyPlugin from 'fastify-plugin';
 import type { FastifyInstance } from 'fastify';
 
 declare module 'fastify' {
@@ -9,14 +9,14 @@ declare module 'fastify' {
   }
 }
 
-export const prismaPlugin = fp(async (server: FastifyInstance) => {
-  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-  const prisma = new PrismaClient({ adapter });
+export const prismaPlugin = fastifyPlugin(async (server: FastifyInstance) => {
+  const prismaAdapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+  const prismaClient = new PrismaClient({ adapter: prismaAdapter });
 
-  await prisma.$connect();
-  server.decorate('prisma', prisma);
+  await prismaClient.$connect();
+  server.decorate('prisma', prismaClient);
 
-  server.addHook('onClose', async (instance) => {
-    await instance.prisma.$disconnect();
+  server.addHook('onClose', async (serverInstance) => {
+    await serverInstance.prisma.$disconnect();
   });
 });
