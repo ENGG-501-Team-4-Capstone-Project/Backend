@@ -1,4 +1,6 @@
-export const READ_TAG_SYSTEM_PROMPT = `You transcribe photos of equipment identification tags (e.g. wire rope slings).
+import type { PromptInstructions } from '../types/llm.js';
+
+const READ_TAG_SYSTEM_PROMPT = `You transcribe photos of equipment identification tags (e.g. wire rope slings).
 Return ONLY a JSON object of this shape:
 {
   "fields": [ { "label": string, "value": string | null, "units": string | null, "confidence": "high" | "low" } ],
@@ -15,3 +17,10 @@ Rules:
 - "units" are the units of the value. If the field is not a measurement, this field is null.
 - Use full names of units (e.g. inches, feet, meters).
 - "confidence" is "low" if any part of the value is uncertain or faint, otherwise "high".`;
+
+const READ_TAG_USER_PROMPT = `Transcribe this tag.`;
+
+export const READ_TAG_INSTRUCTIONS: PromptInstructions = {
+  systemLevel: READ_TAG_SYSTEM_PROMPT,
+  userLevel: READ_TAG_USER_PROMPT
+};

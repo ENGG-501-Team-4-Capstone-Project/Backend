@@ -1,8 +1,11 @@
 import type { FastifyInstance } from 'fastify';
 import type { ReadTagBody } from '../types/tag.js';
 import { normalizeReading, parseModelJson } from '../utils/tag.js';
-import { OpenRouterError, requestTagTranscription } from '../services/openrouter.js';
+import { OpenRouterError, promptLLM } from '../services/openrouter.js';
 import { toDataUrl } from '../utils/image.js';
+import type { EvaluateBody } from '../types/evaluate.js';
+import { READ_TAG_INSTRUCTIONS } from '../prompts/read-tag.js';
+import type { PromptPayloadContent } from '../types/llm.js';
 
 export default function (server: FastifyInstance) {
   server.post<{ Body: ReadTagBody }>(
@@ -19,7 +22,7 @@ export default function (server: FastifyInstance) {
     async (request, reply) => {
       const apiKey = process.env.OPEN_ROUTER_API_KEY;
       if (!apiKey) {
-        return reply.code(500).send({ error: 'OPENROUTER_API_KEY is not set' });
+        return reply.code(500).send({ error: 'OPEN_ROUTER_API_KEY is not set' });
       }
 
       const imageUrl = toDataUrl(request.body.image);
@@ -28,7 +31,10 @@ export default function (server: FastifyInstance) {
       }
 
       try {
-        const transcriptionContent = await requestTagTranscription(apiKey, request.body.image, imageUrl);
+        const payload: PromptPayloadContent = {
+          imageUrls: [imageUrl]
+        };
+        const transcriptionContent = await promptLLM(apiKey, payload, READ_TAG_INSTRUCTIONS);
         return normalizeReading(parseModelJson(transcriptionContent));
       } catch (error) {
         if (error instanceof OpenRouterError) {
@@ -40,4 +46,11 @@ export default function (server: FastifyInstance) {
       }
     }
   );
+
+  server.post<{ Body: EvaluateBody }>('evaluate-rig', async (request, reply) => {
+    const apiKey = process.env.OPEN_ROUTER_API_KEY;
+    if (!apiKey) {
+      return reply.code(500).send({ error: 'OPEN_ROUTER_API_KEY is not set' });
+    }
+  });
 }

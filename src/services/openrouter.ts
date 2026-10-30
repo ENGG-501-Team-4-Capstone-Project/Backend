@@ -1,7 +1,6 @@
-import { READ_TAG_SYSTEM_PROMPT } from '../prompts/read-tag.js';
-import { toDataUrl } from '../utils/image.js';
+import type { PromptInstructions, PromptPayloadContent, UserContent } from '../types/llm.js';
 
-const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const OPEN_ROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = 'anthropic/claude-haiku-5.5';
 
 export class OpenRouterError extends Error {
@@ -15,8 +14,16 @@ export class OpenRouterError extends Error {
   }
 }
 
-export async function requestTagTranscription(apiKey: string, image: string, imageUrl: string): Promise<string> {
-  const response = await fetch(OPENROUTER_URL, {
+function buildContent({ text, data, imageUrls = [] }: PromptPayloadContent): UserContent[] {
+  const parts: UserContent[] = [];
+  if (text) parts.push({ type: 'text', text });
+  if (data !== undefined) parts.push({ type: 'text', text: JSON.stringify(data, null, 2) });
+  for (const url of imageUrls) parts.push({ type: 'image_url', image_url: { url } });
+  return parts;
+}
+
+export async function promptLLM(apiKey: string, promptContent: PromptPayloadContent, promptInstructions: PromptInstructions): Promise<string> {
+  const response = await fetch(OPEN_ROUTER_URL, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -27,14 +34,8 @@ export async function requestTagTranscription(apiKey: string, image: string, ima
       temperature: 0,
       response_format: { type: 'json_object' },
       messages: [
-        { role: 'system', content: READ_TAG_SYSTEM_PROMPT },
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: 'Transcribe this tag.' },
-            { type: 'image_url', image_url: { url: imageUrl } }
-          ]
-        }
+        { role: 'system', content: promptInstructions.systemLevel },
+        { role: 'user', content: [{ type: 'text', text: promptInstructions.userLevel }, ...buildContent(promptContent)] }
       ]
     })
   });
@@ -43,11 +44,11 @@ export async function requestTagTranscription(apiKey: string, image: string, ima
     throw new OpenRouterError('LLM request failed', response.status, await response.text());
   }
 
-  const responseData = (await response.json()) as {
+  const data = (await response.json()) as {
     choices?: { message?: { content?: string } }[];
   };
-  const transcriptionContent = responseData.choices?.[0]?.message?.content;
-  if (!transcriptionContent) throw new OpenRouterError('Empty response from model');
+  const result = data.choices?.[0]?.message?.content;
+  if (!result) throw new OpenRouterError('Empty response from model');
 
-  return transcriptionContent;
+  return result;
 }
