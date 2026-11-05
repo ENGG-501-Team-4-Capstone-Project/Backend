@@ -1,5 +1,3 @@
-import type { RIG_TYPE } from './inspection.js';
-
 export type Confidence = 'high' | 'low';
 
 export interface ReadTagBody {
@@ -16,5 +14,4 @@ export interface TagField {
 
 export interface TagReading {
   fields: TagField[];
-  rigType: RIG_TYPE;
 }
