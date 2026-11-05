@@ -1,9 +1,10 @@
-import type { InspectionRule } from './inspection.js';
+import type { InspectionRule, RIG_TYPE } from './inspection.js';
 import type { TagField } from './tag.js';
 
 export interface EvaluateBody {
   tagInformation: TagField[];
   images: string[];
+  rigType: RIG_TYPE;
 }
 
 type EvaluationStatus = 'pass' | 'fail' | 'cannot_assess';

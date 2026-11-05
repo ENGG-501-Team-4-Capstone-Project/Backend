@@ -43,7 +43,7 @@ export default function (server: FastifyInstance) {
           return reply.code(502).send({ error: error.message, status: error.status });
         }
         request.log.error({ error }, 'Model returned invalid output');
-        return reply.code(502).send({ error: 'Model returned invalid output' });
+        return reply.code(502).send({ error: error });
       }
     }
   );

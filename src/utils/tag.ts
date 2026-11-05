@@ -1,3 +1,4 @@
+import type { RIG_TYPE } from '../types/inspection.js';
 import type { TagField, TagReading } from '../types/tag.js';
 
 export function slugify(label: string): string {
@@ -14,8 +15,9 @@ export function parseModelJson(content: string): unknown {
 }
 
 export function normalizeReading(rawReading: unknown): TagReading {
-  const rawReadingObject = (rawReading ?? {}) as { fields?: unknown };
+  const rawReadingObject = (rawReading ?? {}) as { fields?: unknown; rigType?: unknown };
   if (!Array.isArray(rawReadingObject.fields)) throw new Error('missing fields array');
+  if (rawReadingObject.rigType === undefined) throw new Error('missing rigType');
 
   const seenSlugCounts = new Map<string, number>();
   const fields: TagField[] = rawReadingObject.fields
@@ -34,5 +36,5 @@ export function normalizeReading(rawReading: unknown): TagReading {
       };
     });
 
-  return { fields };
+  return { fields, rigType: rawReadingObject.rigType as RIG_TYPE };
 }

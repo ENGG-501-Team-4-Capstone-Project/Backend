@@ -1,3 +1,4 @@
+import fastifyCors from '@fastify/cors';
 import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
 import { prismaPlugin } from './plugins/prisma.js';
 import llm from './routes/llm.js';
@@ -18,6 +19,10 @@ const environmentToLogger = {
 
 const fastify = Fastify({
   logger: environmentToLogger[process.env.NODE_ENV as keyof typeof environmentToLogger] ?? true
+});
+
+await fastify.register(fastifyCors, {
+  origin: 'http://localhost:5173'
 });
 
 await fastify.register(prismaPlugin);
