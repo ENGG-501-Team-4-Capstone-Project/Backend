@@ -22,4 +22,4 @@ const GENERAL_INSPECTION_RULES: InspectionRule[] = [
   }
 ];
 
-export const INSPECTION_RULES: InspectionRule[] = [...SLING_INSPECTION_RULES];
+export const INSPECTION_RULES: InspectionRule[] = [...GENERAL_INSPECTION_RULES, ...SLING_INSPECTION_RULES];
