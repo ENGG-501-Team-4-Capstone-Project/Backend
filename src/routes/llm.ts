@@ -3,7 +3,7 @@ import type { ReadTagBody } from '../types/tag.js';
 import { normalizeReading, parseModelJson } from '../utils/tag.js';
 import { OpenRouterError, promptLLM } from '../services/openrouter.js';
 import { toDataUrl } from '../utils/image.js';
-import type { EvaluateBody } from '../types/evaluate.js';
+import type { EvaluateBody, EvaluationVerdict } from '../types/evaluate.js';
 import { READ_TAG_INSTRUCTIONS } from '../prompts/read_tag.js';
 import type { PromptPayloadContent } from '../types/llm.js';
 import { EVALUATE_RIG_INSTRUCTIONS } from '../prompts/evaluate_rig.js';
@@ -70,7 +70,7 @@ export default function (server: FastifyInstance) {
         imageUrls: imageUrls
       };
       const rigEvaluation = await promptLLM(apiKey, payload, EVALUATE_RIG_INSTRUCTIONS);
-      return parseModelJson(rigEvaluation);
+      return parseModelJson(rigEvaluation) as EvaluationVerdict;
     } catch (error) {
       if (error instanceof OpenRouterError) {
         request.log.error({ status: error.status, detail: error.detail }, error.message);
