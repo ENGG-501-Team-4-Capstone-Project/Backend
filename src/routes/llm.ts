@@ -7,6 +7,7 @@ import type { EvaluateBody, EvaluationVerdict } from '../types/evaluate.js';
 import { READ_TAG_INSTRUCTIONS } from '../prompts/read_tag.js';
 import type { PromptPayloadContent } from '../types/llm.js';
 import { EVALUATE_RIG_INSTRUCTIONS } from '../prompts/evaluate_rig.js';
+import { getInspectionRules } from '../utils/evaluate.js';
 
 export default function (server: FastifyInstance) {
   server.post<{ Body: ReadTagBody }>(
@@ -64,13 +65,22 @@ export default function (server: FastifyInstance) {
       return reply.code(400).send({ error: 'no tag information provided' });
     }
 
+    const rigType = request.body.rigType;
+    if (!rigType) {
+      return reply.code(400).send({ error: 'no rigType provided' });
+    }
+
     try {
+      const inspectionRules = getInspectionRules(rigType);
       const payload: PromptPayloadContent = {
-        data: tagInformation,
+        data: {
+          tagInformation,
+          inspectionRules: inspectionRules
+        },
         imageUrls: imageUrls
       };
       const rigEvaluation = await promptLLM(apiKey, payload, EVALUATE_RIG_INSTRUCTIONS);
-      return parseModelJson(rigEvaluation) as EvaluationVerdict;
+      return parseModelJson(rigEvaluation);
     } catch (error) {
       if (error instanceof OpenRouterError) {
         request.log.error({ status: error.status, detail: error.detail }, error.message);
