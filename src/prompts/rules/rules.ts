@@ -15,7 +15,7 @@ const GENERAL_INSPECTION_RULES: InspectionRule[] = [
     appliesTo: 'ALL'
   },
   {
-    id: 'G3 - Load exceeds capacity',
+    id: 'G3 - Load is within capacity',
     pass: 'Rated capacity for the hitch type in use is at least the load weight',
     fail: 'Capacity is below the load or cannot be determined',
     appliesTo: 'ALL'
