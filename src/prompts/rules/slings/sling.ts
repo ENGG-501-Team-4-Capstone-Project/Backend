@@ -1,4 +1,5 @@
 import type { InspectionRule } from '../../../types/inspection.js';
+import { WIRE_ROPE_SLING_RULES } from './wire_rope.js';
 
 const GENERAL_SLING_INSPECTION_RULES: InspectionRule[] = [
   {
@@ -9,4 +10,4 @@ const GENERAL_SLING_INSPECTION_RULES: InspectionRule[] = [
   }
 ];
 
-export const SLING_INSPECTION_RULES: InspectionRule[] = [...GENERAL_SLING_INSPECTION_RULES];
+export const SLING_INSPECTION_RULES: InspectionRule[] = [...GENERAL_SLING_INSPECTION_RULES, ...WIRE_ROPE_SLING_RULES];
