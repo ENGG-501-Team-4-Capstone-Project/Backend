@@ -3,7 +3,6 @@ import type { ReadTagBody } from '../types/tag.js';
 import { normalizeReading, parseModelJson } from '../utils/tag.js';
 import { OpenRouterError, promptLLM } from '../services/openrouter.js';
 import { toDataUrl } from '../utils/image.js';
-import type { EvaluateBody } from '../types/evaluate.js';
 import { READ_TAG_INSTRUCTIONS } from '../prompts/read-tag.js';
 import type { PromptPayloadContent } from '../types/llm.js';
 
@@ -46,11 +45,4 @@ export default function (server: FastifyInstance) {
       }
     }
   );
-
-  server.post<{ Body: EvaluateBody }>('evaluate-rig', async (request, reply) => {
-    const apiKey = process.env.OPEN_ROUTER_API_KEY;
-    if (!apiKey) {
-      return reply.code(500).send({ error: 'OPEN_ROUTER_API_KEY is not set' });
-    }
-  });
 }
