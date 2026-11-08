@@ -22,11 +22,22 @@ services:
     environment:
       PORT: 3000
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}
+      OPEN_ROUTER_API_KEY: ${OPEN_ROUTER_API_KEY:?OPEN_ROUTER_API_KEY is required}
     ports:
       - '3000:3000'
     depends_on:
       database:
         condition: service_healthy
+    develop:
+      watch:
+        - action: rebuild
+          path: ./src
+        - action: rebuild
+          path: ./prisma
+        - action: rebuild
+          path: ./package.json
+        - action: rebuild
+          path: ./pnpm-lock.yaml
 
 volumes:
   pgdata:

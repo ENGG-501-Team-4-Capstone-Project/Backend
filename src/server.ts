@@ -1,7 +1,8 @@
 import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
 import { prismaPlugin } from './plugins/prisma.js';
+import llm from './routes/llm.js';
 
-const envToLogger = {
+const environmentToLogger = {
   development: {
     transport: {
       target: 'pino-pretty',
@@ -16,10 +17,11 @@ const envToLogger = {
 };
 
 const fastify = Fastify({
-  logger: envToLogger[process.env.NODE_ENV as keyof typeof envToLogger] ?? true
+  logger: environmentToLogger[process.env.NODE_ENV as keyof typeof environmentToLogger] ?? true
 });
 
 await fastify.register(prismaPlugin);
+await fastify.register(llm);
 
 fastify.get('/test', async (_request, reply) => {
   return reply.code(200).send('Hello World');

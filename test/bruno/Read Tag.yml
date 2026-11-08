@@ -1,0 +1,53 @@
+info:
+  name: Read Tag
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:3000/read-tag
+  body:
+    type: json
+    data: |-
+      {
+        "image": "data:image/jpeg;base64,{{tagImage}}"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const fs = require('fs');
+        const path = require('path');
+
+        const file = path.join(bru.cwd(), '5.jpg');
+        bru.setVar('tagImage', fs.readFileSync(file).toString('base64'));
+    - type: tests
+      code: |-
+        test('returns 200', function () {
+          expect(res.status).to.equal(200);
+        });
+
+        test('returns a non-empty fields array', function () {
+          expect(res.body.fields).to.be.an('array').that.is.not.empty;
+        });
+
+        test('every field has the expected shape', function () {
+          for (const f of res.body.fields) {
+            expect(f).to.have.all.keys('id', 'label', 'units', 'value', 'confidence');
+            expect(['high', 'low']).to.include(f.confidence);
+          }
+        });
+
+        test('ids are unique', function () {
+          const ids = res.body.fields.map((f) => f.id);
+          expect(new Set(ids).size).to.equal(ids.length);
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
