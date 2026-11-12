@@ -16,4 +16,4 @@ RUN pnpm build
 
 EXPOSE 3000
 
-CMD ["./entrypoint.sh"]
+CMD ["pnpm", "start"]
